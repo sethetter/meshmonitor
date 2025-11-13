@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meshtastic MQTT Monitor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📡 Meshtastic MQTT Monitor</h1>
+            <div class="stats" id="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total Messages:</span>
+                    <span class="stat-value" id="totalMessages">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Active Nodes:</span>
+                    <span class="stat-value" id="totalNodes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Messages with Location:</span>
+                    <span class="stat-value" id="messagesWithLocation">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel">
+                    <h2>Nodes</h2>
+                    <div class="filter-controls">
+                        <input type="text" id="nodeFilter" placeholder="Filter nodes..." />
+                    </div>
+                    <div id="nodesList" class="nodes-list">
+                        <p class="loading">Loading nodes...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <div class="panel">
+                    <h2>Map</h2>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel">
+                    <h2>Messages</h2>
+                    <div class="filter-controls">
+                        <select id="nodeFilterSelect">
+                            <option value="">All Nodes</option>
+                        </select>
+                        <button id="refreshBtn">Refresh</button>
+                    </div>
+                    <div id="messagesList" class="messages-list">
+                        <p class="loading">Loading messages...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
