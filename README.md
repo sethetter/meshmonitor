@@ -2,6 +2,14 @@
 
 A real-time monitoring application for Meshtastic network traffic via MQTT. This application receives Meshtastic messages, stores them in a SQLite database, and displays them in a web interface with an interactive map.
 
+## Quick Start
+
+Choose your deployment method:
+
+- **🚀 DigitalOcean (Easiest)**: [Complete DigitalOcean Deployment Guide](DIGITALOCEAN.md) - Step-by-step from zero to production
+- **🐳 Docker (Recommended)**: See [Docker Deployment](#docker-deployment) below - Works anywhere
+- **🔧 Manual Installation**: See [Installation](#installation) section - For custom setups
+
 ## Features
 
 - **MQTT Server Integration**: Connects to an MQTT broker to receive Meshtastic traffic
