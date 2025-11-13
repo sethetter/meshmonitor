@@ -57,7 +57,7 @@ case $COMMAND in
         echo "========================================"
         echo "Meshtastic MQTT Monitor is running!"
         echo "========================================"
-        echo "Web Interface: http://localhost:5000"
+        echo "Web Interface: http://localhost:8080"
         echo "MQTT Broker: localhost:1883 (internal)"
         echo "MQTT Broker: localhost:8883 (external)"
         echo "WebSocket: ws://localhost:9001"

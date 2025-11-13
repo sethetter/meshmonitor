@@ -131,7 +131,7 @@ docker-compose up -d
 ```
 
 The application will be available at:
-- **Web Interface**: http://localhost:5000
+- **Web Interface**: http://localhost:8080
 - **MQTT Broker**: localhost:1883 (internal) / localhost:8883 (external)
 - **WebSocket**: ws://localhost:9001
 
@@ -393,6 +393,21 @@ mosquitto_sub -h localhost -p 8883 -t 'msh/#' -v
 ```bash
 # Fix permissions on data directories
 sudo chown -R $USER:$USER data mosquitto
+```
+
+**Port already in use (e.g., port 5000 or 8080):**
+```bash
+# Option 1: Stop the service using the port
+# On macOS, port 5000 is often used by AirPlay Receiver
+sudo lsof -i :8080  # Find what's using the port
+# Then stop that service or change the port mapping
+
+# Option 2: Change the external port in docker-compose.yml
+# Edit the ports section for the app service:
+# Change "8080:5000" to "3000:5000" (or any available port)
+# Then restart:
+docker-compose down
+docker-compose up -d
 ```
 
 **Rebuild after code changes:**

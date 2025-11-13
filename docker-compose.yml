@@ -28,7 +28,7 @@ services:
     container_name: meshmonitor-app
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "8080:5000"
     environment:
       - MQTT_BROKER_HOST=mosquitto
       - MQTT_BROKER_PORT=1883
