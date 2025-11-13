@@ -103,6 +103,315 @@ The application consists of three main components running together:
 2. **Database**: Stores messages and node information in SQLite
 3. **Web Server**: Serves the web interface and provides REST API endpoints
 
+## Docker Deployment
+
+The easiest way to deploy Meshtastic MQTT Monitor is using Docker. This method bundles all dependencies and services into containers.
+
+### Quick Start with Docker
+
+#### Prerequisites
+
+- Docker Engine 20.10+ ([Install Docker](https://docs.docker.com/get-docker/))
+- Docker Compose 2.0+ (usually included with Docker Desktop)
+
+#### Development Deployment
+
+For local development or testing:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/meshmonitor.git
+cd meshmonitor
+
+# Start all services (app + mosquitto MQTT broker)
+./docker-run.sh up
+
+# Or manually with docker-compose
+docker-compose up -d
+```
+
+The application will be available at:
+- **Web Interface**: http://localhost:5000
+- **MQTT Broker**: localhost:1883 (internal) / localhost:8883 (external)
+- **WebSocket**: ws://localhost:9001
+
+#### Production Deployment with Docker
+
+For production deployment on a public server:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/meshmonitor.git
+cd meshmonitor
+
+# Start production services (app + mosquitto + nginx)
+sudo ./docker-prod.sh up
+
+# Or manually with docker-compose
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### Docker Services
+
+The Docker deployment includes three services:
+
+1. **mosquitto** - Eclipse Mosquitto MQTT broker
+   - Port 1883: Internal MQTT (for app communication)
+   - Port 8883: External MQTT (for Meshtastic devices)
+   - Port 9001: WebSocket MQTT
+
+2. **app** - Meshtastic MQTT Monitor application
+   - Port 5000: Flask web server and REST API
+
+3. **nginx** - Reverse proxy (production only)
+   - Port 80: HTTP (redirects to HTTPS in production)
+   - Port 443: HTTPS
+
+#### Docker Commands
+
+```bash
+# Start services
+./docker-run.sh up
+# or: docker-compose up -d
+
+# Stop services
+./docker-run.sh down
+# or: docker-compose down
+
+# View logs
+./docker-run.sh logs
+# or: docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f app
+docker-compose logs -f mosquitto
+
+# Restart services
+./docker-run.sh restart
+# or: docker-compose restart
+
+# Rebuild images after code changes
+./docker-run.sh build
+# or: docker-compose build
+
+# Check service status
+docker-compose ps
+```
+
+### Docker Configuration
+
+#### Environment Variables
+
+Create a `.env` file (or copy from `.env.example`):
+
+```bash
+MQTT_BROKER_HOST=mosquitto
+MQTT_BROKER_PORT=1883
+MQTT_TOPIC=msh/#
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+FLASK_DEBUG=False
+DATABASE_PATH=/app/data/meshmonitor.db
+```
+
+#### MQTT Broker Configuration
+
+Edit `mosquitto/config/mosquitto.conf` to customize the MQTT broker:
+
+```conf
+# Enable authentication
+allow_anonymous false
+password_file /mosquitto/config/passwd
+
+# Configure listeners
+listener 1883
+listener 8883
+listener 9001
+protocol websockets
+```
+
+To create MQTT users:
+
+```bash
+# Enter the mosquitto container
+docker-compose exec mosquitto sh
+
+# Create a user (inside container)
+mosquitto_passwd -c /mosquitto/config/passwd meshtastic_user
+
+# Exit container
+exit
+
+# Restart mosquitto
+docker-compose restart mosquitto
+```
+
+#### Nginx Configuration
+
+For production with SSL, edit `nginx/nginx.conf`:
+
+1. Update `server_name` with your domain
+2. Uncomment HTTPS server block
+3. Update SSL certificate paths
+4. Enable HTTP to HTTPS redirect
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name mesh.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/mesh.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mesh.yourdomain.com/privkey.pem;
+
+    # ... rest of configuration
+}
+```
+
+### Docker Production Deployment with Domain
+
+Complete steps for deploying to a public server:
+
+#### 1. Set up your server
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install Docker Compose
+sudo apt install docker-compose-plugin
+
+# Clone repository
+git clone https://github.com/yourusername/meshmonitor.git
+cd meshmonitor
+```
+
+#### 2. Configure DNS
+
+Point your domain to the server:
+- Create an A record for `mesh.yourdomain.com` → your server IP
+
+#### 3. Get SSL Certificate
+
+```bash
+# Install certbot
+sudo apt install certbot
+
+# Stop nginx temporarily if running
+docker-compose -f docker-compose.prod.yml stop nginx
+
+# Obtain certificate
+sudo certbot certonly --standalone -d mesh.yourdomain.com
+
+# Certificates will be in: /etc/letsencrypt/live/mesh.yourdomain.com/
+```
+
+#### 4. Update Configuration
+
+Edit `nginx/nginx.conf`:
+- Replace `mesh.yourdomain.com` with your domain
+- Uncomment the HTTPS server block
+- Ensure SSL certificate paths are correct
+
+#### 5. Configure Firewall
+
+```bash
+# Allow required ports
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 80/tcp    # HTTP
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw allow 8883/tcp  # MQTT
+sudo ufw allow 9001/tcp  # WebSocket (optional)
+sudo ufw enable
+```
+
+#### 6. Start Services
+
+```bash
+# Start in production mode
+sudo ./docker-prod.sh up
+
+# Or manually
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### 7. Configure Meshtastic Devices
+
+Point your Meshtastic devices to your server:
+
+```bash
+meshtastic --set mqtt.enabled true
+meshtastic --set mqtt.address mesh.yourdomain.com
+meshtastic --set mqtt.port 8883
+meshtastic --set mqtt.username meshtastic_user  # if using auth
+meshtastic --set mqtt.password your_password    # if using auth
+```
+
+### Docker Volumes and Persistence
+
+Data is persisted in Docker volumes:
+
+```bash
+# View volumes
+docker volume ls
+
+# Backup database
+docker-compose exec app cat /app/data/meshmonitor.db > backup.db
+
+# Restore database
+docker-compose exec -T app sh -c 'cat > /app/data/meshmonitor.db' < backup.db
+
+# Access database directly
+docker-compose exec app sqlite3 /app/data/meshmonitor.db
+```
+
+### Docker Troubleshooting
+
+**Services won't start:**
+```bash
+# Check logs
+docker-compose logs
+
+# Check specific service
+docker-compose logs app
+docker-compose logs mosquitto
+```
+
+**Can't connect to MQTT:**
+```bash
+# Test MQTT from inside Docker network
+docker-compose exec app sh -c "pip install paho-mqtt && python -c \"import paho.mqtt.client as mqtt; c = mqtt.Client(); c.connect('mosquitto', 1883); print('Connected')\""
+
+# Test MQTT from host
+mosquitto_sub -h localhost -p 8883 -t 'msh/#' -v
+```
+
+**Permission issues:**
+```bash
+# Fix permissions on data directories
+sudo chown -R $USER:$USER data mosquitto
+```
+
+**Rebuild after code changes:**
+```bash
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+### Docker Advantages
+
+✅ **Easy Setup** - One command deployment
+✅ **Isolated Environment** - No dependency conflicts
+✅ **Consistent** - Same environment everywhere
+✅ **Includes MQTT Broker** - No separate Mosquitto installation
+✅ **Production Ready** - Nginx reverse proxy included
+✅ **Auto-restart** - Services restart on failure
+✅ **Easy Updates** - Pull and rebuild
+✅ **Portable** - Works on any Docker-compatible host
+
 ## Web Interface
 
 The web interface is divided into three main sections:
