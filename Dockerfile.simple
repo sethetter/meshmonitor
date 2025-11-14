@@ -1,0 +1,44 @@
+# Simplified Dockerfile for Meshtastic MQTT Monitor
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100
+
+# Create app user
+RUN groupadd -r meshmonitor && useradd -r -g meshmonitor meshmonitor
+
+# Set working directory
+WORKDIR /app
+
+# Copy application files first
+COPY --chown=meshmonitor:meshmonitor . .
+
+# Install Python dependencies
+# Using --no-deps for meshtastic to avoid compilation issues
+RUN pip install --no-cache-dir \
+    paho-mqtt==1.6.1 \
+    flask==3.0.0 \
+    flask-cors==4.0.0 \
+    protobuf==4.25.1 \
+    requests==2.31.0 && \
+    pip install --no-cache-dir --no-deps meshtastic==2.2.15
+
+# Create data directory
+RUN mkdir -p /app/data && chown -R meshmonitor:meshmonitor /app/data
+
+# Switch to non-root user
+USER meshmonitor
+
+# Expose Flask port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:5000/api/health')" || exit 1
+
+# Run the application
+CMD ["python", "main.py"]
