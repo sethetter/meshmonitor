@@ -7,9 +7,9 @@ services:
     container_name: meshmonitor-mosquitto
     restart: unless-stopped
     ports:
-      - "1883:1883"   # MQTT
-      - "8883:8883"   # MQTT (public)
-      - "9001:9001"   # WebSocket
+      - "1883:1883"
+      - "8883:8883"
+      - "9001:9001"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
@@ -22,9 +22,9 @@ services:
       timeout: 10s
       retries: 3
 
-  # Meshtastic MQTT Monitor Application
+  # Meshtastic MQTT Monitor Application (No Build Required)
   app:
-    build: .
+    image: python:3.11-slim
     container_name: meshmonitor-app
     restart: unless-stopped
     ports:
@@ -38,42 +38,17 @@ services:
       - FLASK_DEBUG=False
       - DATABASE_PATH=/app/data/meshmonitor.db
     volumes:
+      - ./:/app
       - ./data:/app/data
+    working_dir: /app
+    command: >
+      bash -c "pip install --quiet -r requirements.txt && python main.py"
     depends_on:
       mosquitto:
         condition: service_healthy
     networks:
       - meshmonitor-network
-    healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/api/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Nginx Reverse Proxy (optional, for production)
-  nginx:
-    image: nginx:alpine
-    container_name: meshmonitor-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-    networks:
-      - meshmonitor-network
-    profiles:
-      - production
 
 networks:
   meshmonitor-network:
     driver: bridge
-
-volumes:
-  mosquitto-data:
-  mosquitto-log:
-  app-data:

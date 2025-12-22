@@ -74,7 +74,7 @@ class Database:
         conn.commit()
         conn.close()
 
-    def insert_message(self, message_data: "MeshtasticMessage") -> int:
+    def insert_message(self, message_data: "MeshtasticMessage") -> Optional[int]:
         """Insert a new message into the database"""
         conn = self.get_connection()
         cursor = conn.cursor()

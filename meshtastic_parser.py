@@ -29,6 +29,7 @@ class MeshtasticMessage(TypedDict):
     snr: float
     rssi: int
     hop_limit: int
+    hop_start: int
 
 
 class MeshtasticParser:
@@ -57,37 +58,19 @@ class MeshtasticParser:
         Returns:
             Dictionary with parsed message data or None if parsing fails
         """
-        logger.info(f"=== PARSE MESSAGE START ===")
-        logger.info(f"Topic: {topic}")
-        logger.debug(f"Payload type: {type(payload)}")
-        logger.debug(f"Payload length: {len(payload) if payload else 0}")
-
         try:
             # First, try to parse as ServiceEnvelope (MQTT messages are wrapped)
             try:
                 envelope = meshtastic.mqtt_pb2.ServiceEnvelope()
                 envelope.ParseFromString(payload)
-                logger.info(f"Parsed as ServiceEnvelope")
-                logger.debug(f"Envelope channel_id: {envelope.channel_id}")
-                logger.debug(f"Envelope gateway_id: {envelope.gateway_id}")
-
-                # Extract the MeshPacket from the envelope
                 data = envelope.packet
-                logger.info(f"Extracted MeshPacket from envelope")
+                logger.info(f"Parsed as ServiceEnvelope")
             except Exception as e:
                 logger.warning(f"Failed to parse as ServiceEnvelope, trying as raw MeshPacket: {e}")
                 # Fallback: try parsing as raw MeshPacket
                 data = meshtastic.mesh_pb2.MeshPacket()
                 data.ParseFromString(payload)
                 logger.info(f"Parsed as raw MeshPacket")
-
-            # Debug: print the raw protobuf data
-            logger.debug(f"data.from={getattr(data, 'from', 'NOT FOUND')}")
-            logger.debug(f"data.to={data.to}")
-            logger.debug(f"data.id={data.id}")
-            logger.debug(f"Has decoded? {data.HasField('decoded')}")
-            if data.HasField('decoded'):
-                logger.debug(f"decoded.portnum={data.decoded.portnum}")
 
             # Extract message fields (protobuf)
             message: MeshtasticMessage = {
@@ -104,7 +87,7 @@ class MeshtasticParser:
                 'snr': data.rx_snr,
                 'rssi': data.rx_rssi,
                 'hop_limit': data.hop_limit,
-                # 'hop_start': data.hop_start,
+                'hop_start': data.hop_start,
             }
 
             logger.info(f"Message: {message}")
