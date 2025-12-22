@@ -3,8 +3,11 @@ import sqlite3
 import json
 import os
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
 import config
+
+if TYPE_CHECKING:
+    from meshtastic_parser import MeshtasticMessage
 
 class Database:
     def __init__(self, db_path: str = None):
@@ -71,7 +74,7 @@ class Database:
         conn.commit()
         conn.close()
 
-    def insert_message(self, message_data: Dict[str, Any]) -> int:
+    def insert_message(self, message_data: "MeshtasticMessage") -> int:
         """Insert a new message into the database"""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -81,8 +84,8 @@ class Database:
                 INSERT INTO messages (
                     message_id, from_node, to_node, channel, packet_type,
                     payload, latitude, longitude, altitude, snr, rssi,
-                    hop_limit, hop_start, raw_data
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    hop_limit
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 message_data.get('message_id'),
                 message_data.get('from_node'),
@@ -95,9 +98,7 @@ class Database:
                 message_data.get('altitude'),
                 message_data.get('snr'),
                 message_data.get('rssi'),
-                message_data.get('hop_limit'),
-                message_data.get('hop_start'),
-                json.dumps(message_data.get('raw_data', {}))
+                message_data.get('hop_limit')
             ))
 
             message_id = cursor.lastrowid
@@ -107,13 +108,17 @@ class Database:
             self.update_node(message_data)
 
             return message_id
-        except sqlite3.IntegrityError:
+        except sqlite3.IntegrityError as e:
             # Duplicate message, ignore
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"IntegrityError inserting message: {e}")
+            logger.warning(f"Message data: message_id={message_data.get('message_id')}, from_node={message_data.get('from_node')}, packet_type={message_data.get('packet_type')}")
             return -1
         finally:
             conn.close()
 
-    def update_node(self, message_data: Dict[str, Any]):
+    def update_node(self, message_data: "MeshtasticMessage") -> None:
         """Update node information"""
         conn = self.get_connection()
         cursor = conn.cursor()

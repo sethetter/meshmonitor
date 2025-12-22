@@ -10,11 +10,15 @@ import threading
 import time
 from database import Database
 from mqtt_broker import MQTTBroker
-from api_server import run_server, db as api_db
+from api_server import run_server
 import config
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from meshtastic_parser import MeshtasticMessage
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -25,7 +29,7 @@ class MeshtasticMonitor:
         self.mqtt_broker = MQTTBroker(message_callback=self.on_message_received)
         self.running = False
 
-    def on_message_received(self, message_data):
+    def on_message_received(self, message_data: "MeshtasticMessage") -> None:
         """Callback when a message is received from MQTT"""
         try:
             # Store message in database

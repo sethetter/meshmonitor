@@ -1,20 +1,21 @@
 """MQTT Broker for receiving Meshtastic messages"""
 import paho.mqtt.client as mqtt
-import json
 import logging
-from datetime import datetime
-from typing import Callable, Optional
+from typing import Callable, Optional, TYPE_CHECKING
 import config
 from meshtastic_parser import MeshtasticParser
 
+if TYPE_CHECKING:
+    from meshtastic_parser import MeshtasticMessage
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
 class MQTTBroker:
-    def __init__(self, message_callback: Callable = None):
+    def __init__(self, message_callback: Optional[Callable[["MeshtasticMessage"], None]] = None):
         self.client = mqtt.Client()
         self.message_callback = message_callback
         self.parser = MeshtasticParser()
@@ -61,7 +62,7 @@ class MQTTBroker:
         except Exception as e:
             logger.error(f"Error processing message: {e}", exc_info=True)
 
-    def start(self, host: str = None, port: int = None):
+    def start(self, host: Optional[str] = None, port: Optional[int] = None):
         """Start the MQTT client and connect to broker"""
         host = host or config.MQTT_BROKER_HOST
         port = port or config.MQTT_BROKER_PORT
