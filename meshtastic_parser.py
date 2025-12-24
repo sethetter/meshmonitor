@@ -5,7 +5,9 @@ from typing import Any, Optional, TypedDict
 import base64
 import meshtastic.mesh_pb2
 import meshtastic.mqtt_pb2
-from meshtastic.portnums_pb2 import NODEINFO_APP, POSITION_APP, TEXT_MESSAGE_APP
+from meshtastic.protobuf.portnums_pb2 import PortNum
+from meshtastic import protocols
+from google.protobuf.json_format import MessageToDict
 
 logger = logging.getLogger(__name__)
 
@@ -34,18 +36,6 @@ class MeshtasticMessage(TypedDict):
 
 class MeshtasticParser:
     """Parse Meshtastic MQTT messages into a structured format"""
-
-    def __init__(self):
-        self.packet_types = {
-            'TEXT_MESSAGE_APP': 'text',
-            'POSITION_APP': 'position',
-            'NODEINFO_APP': 'nodeinfo',
-            'TELEMETRY_APP': 'telemetry',
-            'ROUTING_APP': 'routing',
-            'ADMIN_APP': 'admin',
-            'WAYPOINT_APP': 'waypoint',
-            'NEIGHBORINFO_APP': 'neighborinfo'
-        }
 
     def parse_message(self, topic: str, payload: bytes) -> Optional[MeshtasticMessage]:
         """
@@ -116,7 +106,7 @@ class MeshtasticParser:
                         message['payload'] = json.dumps(payload_data)
 
                 # Parse position data
-                if decoded.portnum == POSITION_APP:
+                if decoded.portnum == PortNum.POSITION_APP:
                     pos = meshtastic.mesh_pb2.Position.FromString(decoded.payload)
                     message['latitude'] = pos.latitude_i / 1e7
                     message['longitude'] = pos.longitude_i / 1e7
@@ -128,12 +118,12 @@ class MeshtasticParser:
                         message['longitude'] = None
 
                 # Parse text message
-                if decoded.portnum == TEXT_MESSAGE_APP:
+                if decoded.portnum == PortNum.TEXT_MESSAGE_APP:
                     message['payload'] = decoded.payload.decode('utf-8')
                     message['packet_type'] = 'Text Message'
 
                 # Parse user info (nodeinfo)
-                if decoded.portnum == NODEINFO_APP:
+                if decoded.portnum == PortNum.NODEINFO_APP:
                     user = meshtastic.mesh_pb2.User.FromString(decoded.payload)
                     message['packet_type'] = 'Node Info'
                     message['payload'] = json.dumps({

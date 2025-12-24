@@ -5,3 +5,5 @@ meshtastic==2.2.15
 protobuf>=6.33.2
 requests==2.31.0
 setuptools>=80.9.0
+ruff
+mypy
