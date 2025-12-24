@@ -1,8 +1,8 @@
 """Flask API server for Meshtastic Monitor"""
+from typing import Optional
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import logging
-import os
 from database import Database
 import config
 
@@ -107,7 +107,7 @@ def health_check():
         'database': 'connected'
     })
 
-def run_server(host: str = None, port: int = None, debug: bool = None):
+def run_server(host: Optional[str] = None, port: Optional[int] = None, debug: Optional[bool] = None):
     """Run the Flask server"""
     host = host or config.FLASK_HOST
     port = port or config.FLASK_PORT

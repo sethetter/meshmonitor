@@ -6,8 +6,6 @@ import base64
 import meshtastic.mesh_pb2
 import meshtastic.mqtt_pb2
 from meshtastic.protobuf.portnums_pb2 import PortNum
-from meshtastic import protocols
-from google.protobuf.json_format import MessageToDict
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +52,13 @@ class MeshtasticParser:
                 envelope = meshtastic.mqtt_pb2.ServiceEnvelope()
                 envelope.ParseFromString(payload)
                 data = envelope.packet
-                logger.info(f"Parsed as ServiceEnvelope")
+                logger.info("Parsed as ServiceEnvelope")
             except Exception as e:
                 logger.warning(f"Failed to parse as ServiceEnvelope, trying as raw MeshPacket: {e}")
                 # Fallback: try parsing as raw MeshPacket
                 data = meshtastic.mesh_pb2.MeshPacket()
                 data.ParseFromString(payload)
-                logger.info(f"Parsed as raw MeshPacket")
+                logger.info("Parsed as raw MeshPacket")
 
             # Extract message fields (protobuf)
             message: MeshtasticMessage = {
@@ -100,7 +98,7 @@ class MeshtasticParser:
                         # Text message
                         try:
                             message['payload'] = base64.b64decode(payload_data).decode('utf-8')
-                        except:
+                        except Exception:
                             message['payload'] = payload_data
                     elif isinstance(payload_data, dict):
                         message['payload'] = json.dumps(payload_data)

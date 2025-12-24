@@ -28,7 +28,7 @@ class MQTTBroker:
     def on_connect(self, client, userdata, flags, rc):
         """Callback for when the client connects to the broker"""
         if rc == 0:
-            logger.info(f"Connected to MQTT broker successfully")
+            logger.info("Connected to MQTT broker successfully")
             # Subscribe to Meshtastic topics
             client.subscribe(config.MQTT_TOPIC)
             logger.info(f"Subscribed to topic: {config.MQTT_TOPIC}")

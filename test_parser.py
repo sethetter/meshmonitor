@@ -19,7 +19,7 @@ class TestParserStructure(unittest.TestCase):
         """Helper to wrap a MeshPacket in a ServiceEnvelope (like real MQTT messages)."""
         envelope = meshtastic.mqtt_pb2.ServiceEnvelope()
         envelope.packet.CopyFrom(mesh_packet)
-        envelope.channel_id = "LongFast"
+        envelope.channel_id = "0"
         envelope.gateway_id = "!2ce82d69"
         return envelope.SerializeToString()
 
@@ -126,7 +126,8 @@ class TestDatabaseIntegration(unittest.TestCase):
             'altitude': None,
             'snr': 5.5,
             'rssi': -100,
-            'hop_limit': 3
+            'hop_limit': 3,
+            'hop_start': 3
         }
 
         # Should insert successfully
@@ -149,7 +150,8 @@ class TestDatabaseIntegration(unittest.TestCase):
             'altitude': 100,
             'snr': 10.0,
             'rssi': -90,
-            'hop_limit': 5
+            'hop_limit': 5,
+            'hop_start': 5
         }
 
         # Should NOT raise TypeError about MeshPacket not being JSON serializable
