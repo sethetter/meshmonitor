@@ -2,7 +2,6 @@
 import sqlite3
 import json
 import os
-from datetime import datetime
 from typing import List, Dict, Any, Optional, TYPE_CHECKING
 import config
 
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
     from meshtastic_parser import MeshtasticMessage
 
 class Database:
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: Optional[str] = None):
         self.db_path = db_path or config.DATABASE_PATH
         # Ensure the directory exists
         db_dir = os.path.dirname(self.db_path)
@@ -128,18 +127,36 @@ class Database:
             conn.close()
             return
 
+        # Extract long_name and short_name from nodeinfo packets
+        long_name = None
+        short_name = None
+        payload = message_data.get('payload')
+        if message_data.get('packet_type') == 'Node Info' and payload:
+            try:
+                payload_data = json.loads(payload)
+                long_name = payload_data.get('longName')
+                short_name = payload_data.get('shortName')
+            except (json.JSONDecodeError, TypeError):
+                pass
+
         cursor.execute('''
-            INSERT INTO nodes (node_id, last_seen, message_count, last_latitude, last_longitude)
-            VALUES (?, CURRENT_TIMESTAMP, 1, ?, ?)
+            INSERT INTO nodes (node_id, long_name, short_name, last_seen, message_count, last_latitude, last_longitude)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP, 1, ?, ?)
             ON CONFLICT(node_id) DO UPDATE SET
                 last_seen = CURRENT_TIMESTAMP,
                 message_count = message_count + 1,
+                long_name = COALESCE(?, long_name),
+                short_name = COALESCE(?, short_name),
                 last_latitude = COALESCE(?, last_latitude),
                 last_longitude = COALESCE(?, last_longitude)
         ''', (
             from_node,
+            long_name,
+            short_name,
             message_data.get('latitude'),
             message_data.get('longitude'),
+            long_name,
+            short_name,
             message_data.get('latitude'),
             message_data.get('longitude')
         ))
@@ -147,13 +164,13 @@ class Database:
         conn.commit()
         conn.close()
 
-    def get_messages(self, limit: int = None, offset: int = 0, node_id: str = None) -> List[Dict[str, Any]]:
+    def get_messages(self, limit: Optional[int] = None, offset: int = 0, node_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get messages from the database"""
         conn = self.get_connection()
         cursor = conn.cursor()
 
         query = 'SELECT * FROM messages'
-        params = []
+        params: List[Any] = []
 
         if node_id:
             query += ' WHERE from_node = ?'
