@@ -2,9 +2,12 @@
 set -e
 
 echo "==> Linting (ruff)..."
-python -m ruff check .
+./venv/bin/python -m ruff check .
 
 echo "==> Type checking (mypy)..."
-python -m mypy --ignore-missing-imports *.py
+./venv/bin/python -m mypy --ignore-missing-imports -- *.py
+
+echo "==> Running tests (mypy)..."
+./venv/bin/python -m unittest discover
 
 echo "==> All checks passed!"
