@@ -5,7 +5,7 @@ from typing import Any, Optional, TypedDict
 import base64
 import meshtastic.mesh_pb2
 import meshtastic.mqtt_pb2
-from meshtastic.protobuf.portnums_pb2 import PortNum
+import meshtastic.portnums_pb2
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ class MeshtasticParser:
                         message['payload'] = json.dumps(payload_data)
 
                 # Parse position data
-                if decoded.portnum == PortNum.POSITION_APP:
+                if decoded.portnum == meshtastic.portnums_pb2.POSITION_APP:
                     pos = meshtastic.mesh_pb2.Position.FromString(decoded.payload)
                     message['latitude'] = pos.latitude_i / 1e7
                     message['longitude'] = pos.longitude_i / 1e7
@@ -116,12 +116,12 @@ class MeshtasticParser:
                         message['longitude'] = None
 
                 # Parse text message
-                if decoded.portnum == PortNum.TEXT_MESSAGE_APP:
+                if decoded.portnum == meshtastic.portnums_pb2.TEXT_MESSAGE_APP:
                     message['payload'] = decoded.payload.decode('utf-8')
                     message['packet_type'] = 'Text Message'
 
                 # Parse user info (nodeinfo)
-                if decoded.portnum == PortNum.NODEINFO_APP:
+                if decoded.portnum == meshtastic.portnums_pb2.NODEINFO_APP:
                     user = meshtastic.mesh_pb2.User.FromString(decoded.payload)
                     message['packet_type'] = 'Node Info'
                     message['payload'] = json.dumps({
