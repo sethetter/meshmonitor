@@ -51,7 +51,7 @@ class MQTTBroker:
             parsed_message = self.parser.parse_message(msg.topic, msg.payload)
 
             if parsed_message:
-                logger.info(f"Parsed message from node: {parsed_message.get('from_node')}")
+                logger.info(f"Parsed packet from node: {parsed_message.get('from_node')}, type: {parsed_message.get('packet_type')}")
 
                 # Call the callback if provided
                 if self.message_callback:
