@@ -19,15 +19,10 @@ primary_region = "ord"
 
 [[services]]
   protocol = "tcp"
-  internal_port = 8883
-  [[services.ports]]
-    port = 8883
-
-[[services]]
-  protocol = "tcp"
   internal_port = 1883
   [[services.ports]]
-    port = 1883
+    port = 8883
+    handlers = ["tls"]
 
 [mounts]
   source = "meshmonitor_data"
