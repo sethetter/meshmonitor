@@ -2,8 +2,9 @@ dbs:
   - path: /data/meshmonitor.db
     replicas:
       - type: s3
-        bucket: ${LITESTREAM_REPLICA_BUCKET}
+        bucket: ${BUCKET_NAME}
         path: meshmonitor
         endpoint: https://fly.storage.tigris.dev
+        region: auto
         access-key-id: ${AWS_ACCESS_KEY_ID}
         secret-access-key: ${AWS_SECRET_ACCESS_KEY}

@@ -44,7 +44,7 @@ wait_for_mosquitto() {
 }
 
 # Restore database from Litestream replica if local copy does not exist
-if [ -n "$LITESTREAM_REPLICA_BUCKET" ] && [ ! -f "$DB_PATH" ]; then
+if [ -n "$BUCKET_NAME" ] && [ ! -f "$DB_PATH" ]; then
 	echo "Restoring database from Litestream replica..."
 	litestream restore -config /etc/litestream.yml -if-replica-exists "$DB_PATH"
 fi
@@ -53,12 +53,12 @@ fi
 wait_for_mosquitto
 
 # Start with or without Litestream replication
-if [ -n "$LITESTREAM_REPLICA_BUCKET" ]; then
+if [ -n "$BUCKET_NAME" ]; then
 	echo "Starting app with Litestream replication..."
 	litestream replicate -config /etc/litestream.yml -exec "python main.py" &
 	APP_PID=$!
 else
-	echo "Starting app without replication (LITESTREAM_REPLICA_BUCKET not set)"
+	echo "Starting app without replication (BUCKET_NAME not set)"
 	python main.py &
 	APP_PID=$!
 fi

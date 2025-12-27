@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
         arm64) echo "arm64" ;; \
         *) echo "amd64" ;; \
     esac) \
-    && curl -fsSL "https://github.com/benbjohnson/litestream/releases/download/v0.3.13/litestream-v0.3.13-linux-${LITESTREAM_ARCH}.tar.gz" \
+    && curl -fsSL "https://github.com/benbjohnson/litestream/releases/download/v0.5.2/litestream-v0.5.2-linux-${LITESTREAM_ARCH}.tar.gz" \
         | tar -C /usr/local/bin -xzf - \
     && apt-get purge -y curl \
     && apt-get autoremove -y \
