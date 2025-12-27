@@ -1,0 +1,34 @@
+app = "meshmonitor"
+primary_region = "ord"
+
+[build]
+
+[env]
+  MQTT_BROKER_HOST = "127.0.0.1"
+  MQTT_BROKER_PORT = "1883"
+  DATABASE_PATH = "/data/meshmonitor.db"
+  FLASK_HOST = "0.0.0.0"
+  FLASK_PORT = "5000"
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8883
+  [[services.ports]]
+    port = 8883
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 1883
+  [[services.ports]]
+    port = 1883
+
+[mounts]
+  source = "meshmonitor_data"
+  destination = "/data"
