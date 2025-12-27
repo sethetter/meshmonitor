@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 ## Configuration
 
-The application can be configured using environment variables or by editing `config.py`:
+The application can be configured using environment variables or by editing `app/config.py`:
 
 ### Environment Variables
 
@@ -85,14 +85,7 @@ FLASK_PORT=8080
 Start the application with:
 
 ```bash
-python main.py
-```
-
-Or make it executable:
-
-```bash
-chmod +x main.py
-./main.py
+python app/main.py
 ```
 
 ### Accessing the Web Interface

@@ -7,6 +7,17 @@ DB_DIR=$(dirname "$DB_PATH")
 # Ensure data directory exists
 mkdir -p "$DB_DIR"
 
+# Require MQTT auth password to be set
+# if [ -z "$MQTT_AUTH_PASSWORD" ]; then
+#     echo "Error: MQTT_AUTH_PASSWORD must be set"
+#     exit 1
+# fi
+#
+# # Generate mosquitto password file
+# MQTT_USER="${MQTT_AUTH_USER:-meshtastic}"
+# echo "Generating mosquitto password file for user: $MQTT_USER"
+# mosquitto_passwd -b -c /mosquitto/config/passwd "$MQTT_USER" "$MQTT_AUTH_PASSWORD"
+
 # Start mosquitto in the background
 echo "Starting Mosquitto..."
 /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf &
@@ -55,11 +66,11 @@ wait_for_mosquitto
 # Start with or without Litestream replication
 if [ -n "$BUCKET_NAME" ]; then
 	echo "Starting app with Litestream replication..."
-	litestream replicate -config /etc/litestream.yml -exec "python main.py" &
+	litestream replicate -config /etc/litestream.yml -exec "python app/main.py" &
 	APP_PID=$!
 else
 	echo "Starting app without replication (BUCKET_NAME not set)"
-	python main.py &
+	python app/main.py &
 	APP_PID=$!
 fi
 

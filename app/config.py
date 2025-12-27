@@ -16,3 +16,6 @@ DATABASE_PATH = os.getenv('DATABASE_PATH', 'meshmonitor.db')
 
 # Application Configuration
 MAX_MESSAGES_DISPLAYED = int(os.getenv('MAX_MESSAGES_DISPLAYED', 1000))
+
+# Discord Configuration
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', '')

@@ -11,6 +11,7 @@ import time
 from database import Database
 from mqtt_broker import MQTTBroker
 from api_server import run_server
+from discord_notifier import send_text_message
 import config
 from typing import TYPE_CHECKING
 
@@ -37,6 +38,13 @@ class MeshtasticMonitor:
 
             if message_id > 0:
                 logger.info(f"Stored message {message_id} from node {message_data.get('from_node')}")
+
+                # Send text messages to Discord
+                if message_data.get('packet_type') == 'Text Message':
+                    send_text_message(
+                        message_data.get('from_node', 'Unknown'),
+                        message_data.get('payload', '')
+                    )
             else:
                 logger.debug("Duplicate message, skipped")
 
