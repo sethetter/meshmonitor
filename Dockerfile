@@ -47,7 +47,7 @@ COPY mosquitto/config/mosquitto.conf /mosquitto/config/mosquitto.conf
 # Create data directories
 RUN mkdir -p /data && chmod +x /app/entrypoint.sh
 
-EXPOSE 5000 1883 8883
+EXPOSE 5000 1883
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
