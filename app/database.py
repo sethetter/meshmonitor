@@ -203,6 +203,20 @@ class Database:
 
         return [dict(row) for row in rows]
 
+    def get_node(self, node_id: str):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM nodes
+            WHERE node_id = ?
+        ''', (node_id))
+
+        row = cursor.fetchone()
+        conn.close()
+
+        return row
+
     def get_messages_with_location(self) -> List[Dict[str, Any]]:
         """Get messages that have location data"""
         conn = self.get_connection()

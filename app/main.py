@@ -8,6 +8,7 @@ import signal
 import sys
 import threading
 import time
+from app import database
 from database import Database
 from mqtt_broker import MQTTBroker
 from api_server import run_server
@@ -41,14 +42,23 @@ class MeshtasticMonitor:
 
                 # Send text messages to Discord
                 if message_data.get('packet_type') == 'Text Message':
-                    num_hops = message_data.get('hop_limit') - message_data.get('hop_start')
-                    # TODO: Get the node names and use in place of IDs here
-                    post_to_discord(
-                        message_data.get('from_node') or 'Unknown',
-                        message_data.get('to_node') or 'Unknown',
-                        num_hops,
-                        message_data.get('payload') or '[missing message data]',
-                    )
+
+                    from_node_id = message_data.get('from_node')
+                    to_node_id = message_data.get('to_node')
+
+                    if not from_node_id or not to_node_id:
+                        logger.error("Couldn't post to discord, no from/to node IDs")
+                    else:
+                        from_node = self.db.get_node(from_node_id)
+                        to_node = self.db.get_node(to_node_id)
+                        num_hops = message_data.get('hop_limit') - message_data.get('hop_start')
+
+                        post_to_discord(
+                            from_node.get("short_name") or from_node_id,
+                            to_node.get("short_name") or to_node_id,
+                            num_hops,
+                            message_data.get('payload') or '[missing message data]',
+                        )
             else:
                 logger.debug("Duplicate message, skipped")
 
