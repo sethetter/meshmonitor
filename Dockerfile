@@ -6,11 +6,11 @@ FROM python:3.11-slim
 ARG TARGETARCH
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && LITESTREAM_ARCH=$(case ${TARGETARCH} in \
-        amd64) echo "amd64" ;; \
+        amd64) echo "x86_64" ;; \
         arm64) echo "arm64" ;; \
-        *) echo "amd64" ;; \
+        *) echo "x86_64" ;; \
     esac) \
-    && curl -fsSL "https://github.com/benbjohnson/litestream/releases/download/v0.5.2/litestream-v0.5.2-linux-${LITESTREAM_ARCH}.tar.gz" \
+    && curl -fsSL "https://github.com/benbjohnson/litestream/releases/download/v0.5.5/litestream-0.5.5-linux-${LITESTREAM_ARCH}.tar.gz" \
         | tar -C /usr/local/bin -xzf - \
     && apt-get purge -y curl \
     && apt-get autoremove -y \
