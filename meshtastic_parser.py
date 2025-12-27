@@ -75,7 +75,7 @@ class MeshtasticParser:
                 'snr': data.rx_snr,
                 'rssi': data.rx_rssi,
                 'hop_limit': data.hop_limit,
-                'hop_start': data.hop_start,
+                'hop_start': getattr(data, 'hop_start', 0),
             }
 
             logger.info(f"Message: {message}")
