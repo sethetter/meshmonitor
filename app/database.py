@@ -85,7 +85,7 @@ class Database:
                     message_id, from_node, to_node, mqtt_source_node, channel,
                     packet_type, payload, latitude, longitude, altitude, snr, rssi,
                     hop_limit
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 message_data.get('message_id'),
                 message_data.get('from_node'),
