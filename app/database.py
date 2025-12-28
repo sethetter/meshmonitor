@@ -210,7 +210,7 @@ class Database:
         cursor.execute('''
             SELECT * FROM nodes
             WHERE node_id = ?
-        ''', (node_id))
+        ''', (node_id,))
 
         row = cursor.fetchone()
         conn.close()

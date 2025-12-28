@@ -53,8 +53,8 @@ class MeshtasticMonitor:
                         num_hops = message_data.get('hop_limit') - message_data.get('hop_start')
 
                         post_to_discord(
-                            from_node.get("short_name") or from_node_id,
-                            to_node.get("short_name") or to_node_id,
+                            from_node["short_name"] if from_node else from_node_id,
+                            to_node["short_name"] if to_node else to_node_id,
                             num_hops,
                             message_data.get('payload') or '[missing message data]',
                         )
