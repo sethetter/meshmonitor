@@ -40,7 +40,7 @@ class MeshtasticMonitor:
                 logger.info(f"Stored message {message_id} from node {message_data.get('from_node')}")
 
                 # Send text messages to Discord
-                if message_data.get('packet_type') == 'Text Message':
+                if message_data.get('packet_type') == 'TEXT_MESSAGE_APP':
 
                     mqtt_source_node_id = message_data.get('mqtt_source_node')
                     from_node_id = message_data.get('from_node')
