@@ -8,7 +8,6 @@ import signal
 import sys
 import threading
 import time
-from app import database
 from database import Database
 from mqtt_broker import MQTTBroker
 from api_server import run_server
