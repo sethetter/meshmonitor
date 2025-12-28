@@ -42,6 +42,7 @@ case "$ACTION" in
 			-p 1883:1883 \
 			-p 8883:8883 \
 			-v "$PROJECT_DIR/data:/data" \
+			-e DISCORD_BOT_USERNAME="MQTT(local)" \
 			--env-file .env \
 			"$IMAGE_NAME"
 
