@@ -21,6 +21,7 @@ class MeshtasticMessage(TypedDict):
     topic: str
     from_node: Optional[str]
     to_node: Optional[str]
+    mqtt_source_node: Optional[str]
     channel: int
     message_id: str
     packet_type: Optional[str]
@@ -67,6 +68,7 @@ class MeshtasticParser:
                 'topic': topic,
                 'from_node': self._extract_node_id(getattr(data, 'from', None)),
                 'to_node': self._extract_node_id(data.to),
+                'mqtt_source_node': self._extract_node_id(getattr(data, 'gateway_id', None)),
                 'channel': data.channel,
                 'message_id': str(data.id),
                 'packet_type': None,

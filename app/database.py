@@ -35,6 +35,7 @@ class Database:
                 message_id TEXT,
                 from_node TEXT NOT NULL,
                 to_node TEXT,
+                mqtt_source_node TEXT,
                 channel INTEGER,
                 packet_type TEXT,
                 payload TEXT,
@@ -81,14 +82,15 @@ class Database:
         try:
             cursor.execute('''
                 INSERT INTO messages (
-                    message_id, from_node, to_node, channel, packet_type,
-                    payload, latitude, longitude, altitude, snr, rssi,
+                    message_id, from_node, to_node, mqtt_source_node, channel,
+                    packet_type, payload, latitude, longitude, altitude, snr, rssi,
                     hop_limit
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 message_data.get('message_id'),
                 message_data.get('from_node'),
                 message_data.get('to_node'),
+                message_data.get('mqtt_source_node'),
                 message_data.get('channel'),
                 message_data.get('packet_type'),
                 message_data.get('payload'),
