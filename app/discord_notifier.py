@@ -21,7 +21,7 @@ def post_to_discord(mqtt_source_name: str, from_name: str, to_name: str, num_hop
         return False
 
     payload = {
-        'username': f"MQTT ({mqtt_source_name})",
+        'username': f"{config.DISCORD_BOT_USERNAME}: ({mqtt_source_name})",
         'embeds': [
             {
                 'type': "rich",
