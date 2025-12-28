@@ -6,6 +6,7 @@ import base64
 import meshtastic.mesh_pb2
 import meshtastic.mqtt_pb2
 import meshtastic.portnums_pb2
+from meshtastic.portnums_pb2 import PortNum
 from google.protobuf.json_format import MessageToDict
 
 logger = logging.getLogger(__name__)
@@ -87,9 +88,9 @@ class MeshtasticParser:
 
                 # Get packet type
                 port_num = decoded.portnum
-                logger.debug(f"port_num value = {str(port_num)}, type = {type(port_num)}")
+                logger.debug(f"port_num = {PortNum.Name(port_num)}, type = {type(port_num)}")
                 if port_num:
-                    message['packet_type'] = str(port_num)
+                    message['packet_type'] = PortNum.Name(port_num)
 
                 # Parse payload based on type
                 if decoded.payload:
@@ -119,12 +120,10 @@ class MeshtasticParser:
                 # Parse text message
                 if decoded.portnum == meshtastic.portnums_pb2.TEXT_MESSAGE_APP:
                     message['payload'] = decoded.payload.decode('utf-8')
-                    message['packet_type'] = 'Text Message'
 
                 # Parse user info (nodeinfo)
                 if decoded.portnum == meshtastic.portnums_pb2.NODEINFO_APP:
                     user = meshtastic.mesh_pb2.User.FromString(decoded.payload)
-                    message['packet_type'] = 'Node Info'
                     message['payload'] = json.dumps(MessageToDict(user))
 
             return message

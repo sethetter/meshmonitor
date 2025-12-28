@@ -12,7 +12,7 @@ def make_message(
     to_node="!def456",
     channel=0,
     message_id="12345",
-    packet_type="Text Message",
+    packet_type="TEXT_MESSAGE_APP",
     payload="Test message",
     latitude=None,
     longitude=None,
@@ -148,7 +148,7 @@ class TestDatabaseInsertUpdate(unittest.TestCase):
             to_node="!test2",
             channel=5,
             message_id="unique123",
-            packet_type="Position",
+            packet_type="POSITION_APP",
             payload="test payload",
             latitude=37.7749,
             longitude=-122.4194,
@@ -199,7 +199,7 @@ class TestDatabaseInsertUpdate(unittest.TestCase):
         message = make_message(
             from_node="!nodeinfo",
             message_id="nodeinfo1",
-            packet_type="Node Info",
+            packet_type="NODEINFO_APP",
             payload=payload,
         )
         self.db.insert_message(message)

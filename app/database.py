@@ -131,7 +131,7 @@ class Database:
         long_name = None
         short_name = None
         payload = message_data.get('payload')
-        if message_data.get('packet_type') == 'Node Info' and payload:
+        if message_data.get('packet_type') == 'NODEINFO_APP' and payload:
             try:
                 payload_data = json.loads(payload)
                 long_name = payload_data.get('longName')
