@@ -51,6 +51,7 @@ class MeshtasticParser:
         """
         try:
             # First, try to parse as ServiceEnvelope (MQTT messages are wrapped)
+            envelope = None
             try:
                 envelope = meshtastic.mqtt_pb2.ServiceEnvelope()
                 envelope.ParseFromString(payload)
@@ -68,7 +69,7 @@ class MeshtasticParser:
                 'topic': topic,
                 'from_node': self._extract_node_id(getattr(data, 'from', None)),
                 'to_node': self._extract_node_id(data.to),
-                'mqtt_source_node': self._extract_node_id(getattr(data, 'gateway_id', None)),
+                'mqtt_source_node': self._extract_node_id(getattr(envelope, 'gateway_id', None)) if envelope else 'Unknown',
                 'channel': data.channel,
                 'message_id': str(data.id),
                 'packet_type': None,
