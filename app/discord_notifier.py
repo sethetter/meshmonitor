@@ -6,7 +6,7 @@ import config
 logger = logging.getLogger(__name__)
 
 
-def post_to_discord(from_name: str, to_name: str, num_hops: int, message: str) -> bool:
+def post_to_discord(mqtt_source_name: str, from_name: str, to_name: str, num_hops: int, message: str) -> bool:
     """Send a text message to Discord via webhook.
 
     Args:
@@ -21,7 +21,7 @@ def post_to_discord(from_name: str, to_name: str, num_hops: int, message: str) -
         return False
 
     payload = {
-        'username': config.DISCORD_BOT_USERNAME,
+        'username': f"MQTT ({mqtt_source_name})",
         'embeds': [
             {
                 'type': "rich",
