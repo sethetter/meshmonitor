@@ -39,30 +39,31 @@ class MeshtasticMonitor:
             if message_id and message_id > 0:
                 logger.info(f"Stored message {message_id} from node {message_data.get('from_node')}")
 
-                # Send text messages to Discord
-                if message_data.get('packet_type') == 'TEXT_MESSAGE_APP':
-
-                    mqtt_source_node_id = message_data.get('mqtt_source_node')
-                    from_node_id = message_data.get('from_node')
-                    to_node_id = message_data.get('to_node')
-
-                    if not from_node_id or not to_node_id or not mqtt_source_node_id:
-                        logger.error("Couldn't post to discord, no from/to node IDs")
-                    else:
-                        mqtt_source_node = self.db.get_node(mqtt_source_node_id)
-                        from_node = self.db.get_node(from_node_id)
-                        to_node = self.db.get_node(to_node_id)
-                        num_hops = message_data.get('hop_limit') - message_data.get('hop_start')
-
-                        post_to_discord(
-                            mqtt_source_node["short_name"] if mqtt_source_node else mqtt_source_node_id,
-                            from_node["short_name"] if from_node else from_node_id,
-                            to_node["short_name"] if to_node else to_node_id,
-                            num_hops,
-                            message_data.get('payload') or '[missing message data]',
-                        )
             else:
                 logger.debug("Duplicate message, skipped")
+
+            # Send text messages to Discord
+            if message_data.get('packet_type') == 'TEXT_MESSAGE_APP':
+
+                mqtt_source_node_id = message_data.get('mqtt_source_node')
+                from_node_id = message_data.get('from_node')
+                to_node_id = message_data.get('to_node')
+
+                if not from_node_id or not to_node_id or not mqtt_source_node_id:
+                    logger.error("Couldn't post to discord, no from/to node IDs")
+                else:
+                    mqtt_source_node = self.db.get_node(mqtt_source_node_id)
+                    from_node = self.db.get_node(from_node_id)
+                    to_node = self.db.get_node(to_node_id)
+                    num_hops = message_data.get('hop_limit') - message_data.get('hop_start')
+
+                    post_to_discord(
+                        mqtt_source_node["short_name"] if mqtt_source_node else mqtt_source_node_id,
+                        from_node["short_name"] if from_node else from_node_id,
+                        to_node["short_name"] if to_node else to_node_id,
+                        num_hops,
+                        message_data.get('payload') or '[missing message data]',
+                    )
 
         except Exception as e:
             logger.error(f"Error storing message: {e}", exc_info=True)
