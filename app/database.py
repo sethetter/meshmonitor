@@ -260,3 +260,152 @@ class Database:
             'total_nodes': total_nodes,
             'messages_with_location': messages_with_location
         }
+
+    def upsert_node_from_meshlink(self, node_data: Dict[str, Any]) -> None:
+        """Insert or update node from MeshLinkBeta data"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                INSERT INTO nodes (
+                    node_id, long_name, short_name, hardware_model,
+                    last_seen, last_latitude, last_longitude, message_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(node_id) DO UPDATE SET
+                    long_name = COALESCE(?, long_name),
+                    short_name = COALESCE(?, short_name),
+                    hardware_model = COALESCE(?, hardware_model),
+                    last_seen = ?,
+                    last_latitude = COALESCE(?, last_latitude),
+                    last_longitude = COALESCE(?, last_longitude),
+                    message_count = COALESCE(?, message_count)
+            ''', (
+                node_data.get('node_id'),
+                node_data.get('long_name'),
+                node_data.get('short_name'),
+                node_data.get('hardware_model'),
+                node_data.get('last_seen_utc'),
+                node_data.get('latitude'),
+                node_data.get('longitude'),
+                node_data.get('total_packets_received', 0),
+                # For UPDATE clause
+                node_data.get('long_name'),
+                node_data.get('short_name'),
+                node_data.get('hardware_model'),
+                node_data.get('last_seen_utc'),
+                node_data.get('latitude'),
+                node_data.get('longitude'),
+                node_data.get('total_packets_received')
+            ))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def insert_packet_from_meshlink(self, packet_data: Dict[str, Any], collector_id: str) -> Optional[int]:
+        """Insert packet from MeshLinkBeta data"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Map MeshLink packet format to MeshMonitor message format
+            cursor.execute('''
+                INSERT INTO messages (
+                    message_id, from_node, to_node, mqtt_source_node, channel,
+                    packet_type, payload, latitude, longitude, altitude,
+                    snr, rssi, hop_limit, hop_start, received_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                f"meshlink-{packet_data.get('received_at_utc', '')}-{packet_data.get('node_id', '')}",
+                packet_data.get('node_id'),
+                None,  # to_node not in MeshLink packet schema
+                packet_data.get('relay_node_id'),
+                packet_data.get('channel_index', 0),
+                packet_data.get('packet_type'),
+                None,  # payload/message text not included for privacy
+                packet_data.get('latitude'),
+                packet_data.get('longitude'),
+                packet_data.get('altitude'),
+                packet_data.get('rx_snr'),
+                packet_data.get('rx_rssi'),
+                packet_data.get('hop_limit'),
+                packet_data.get('hop_start'),
+                packet_data.get('received_at_utc')
+            ))
+
+            message_id = cursor.lastrowid
+            conn.commit()
+            return message_id
+        except sqlite3.IntegrityError:
+            # Duplicate, ignore
+            return -1
+        finally:
+            conn.close()
+
+    def insert_topology_link(self, link_data: Dict[str, Any], collector_id: str) -> Optional[int]:
+        """Insert network topology link as a special message"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Store topology as a special message type
+            payload = json.dumps({
+                'source': link_data.get('source_node_id'),
+                'neighbor': link_data.get('neighbor_node_id'),
+                'avg_snr': link_data.get('avg_snr'),
+                'avg_rssi': link_data.get('avg_rssi'),
+                'total_packets': link_data.get('total_packets'),
+                'link_quality': link_data.get('link_quality_score')
+            })
+
+            cursor.execute('''
+                INSERT INTO messages (
+                    message_id, from_node, to_node, packet_type,
+                    payload, snr, rssi, received_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                f"topo-{link_data.get('source_node_id')}-{link_data.get('neighbor_node_id')}-{link_data.get('last_heard_utc')}",
+                link_data.get('source_node_id'),
+                link_data.get('neighbor_node_id'),
+                'TOPOLOGY_LINK',
+                payload,
+                link_data.get('avg_snr'),
+                link_data.get('avg_rssi'),
+                link_data.get('last_heard_utc')
+            ))
+
+            message_id = cursor.lastrowid
+            conn.commit()
+            return message_id
+        except sqlite3.IntegrityError:
+            return -1
+        finally:
+            conn.close()
+
+    def insert_traceroute(self, trace_data: Dict[str, Any], collector_id: str) -> Optional[int]:
+        """Insert traceroute as a special message"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                INSERT INTO messages (
+                    message_id, from_node, to_node, packet_type,
+                    payload, received_at
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                f"trace-{trace_data.get('from_node_id')}-{trace_data.get('to_node_id')}-{trace_data.get('received_at_utc')}",
+                trace_data.get('from_node_id'),
+                trace_data.get('to_node_id'),
+                'TRACEROUTE',
+                trace_data.get('route_json'),
+                trace_data.get('received_at_utc')
+            ))
+
+            message_id = cursor.lastrowid
+            conn.commit()
+            return message_id
+        except sqlite3.IntegrityError:
+            return -1
+        finally:
+            conn.close()
