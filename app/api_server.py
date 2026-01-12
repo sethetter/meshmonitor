@@ -20,8 +20,23 @@ db = Database()
 
 @app.route('/')
 def index():
-    """Serve the main HTML page"""
+    """Serve the main HTML page (MQTT monitor)"""
     return send_from_directory('static', 'index.html')
+
+@app.route('/nodes.html')
+def nodes():
+    """Serve the nodes page"""
+    return send_from_directory('static', 'nodes.html')
+
+@app.route('/traceroutes.html')
+def traceroutes():
+    """Serve the traceroutes page"""
+    return send_from_directory('static', 'traceroutes.html')
+
+@app.route('/connections.html')
+def connections():
+    """Serve the connections page"""
+    return send_from_directory('static', 'connections.html')
 
 @app.route('/api/messages', methods=['GET'])
 def get_messages():
@@ -93,6 +108,123 @@ def get_stats():
         })
     except Exception as e:
         logger.error(f"Error getting stats: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/nodes/<node_id>', methods=['GET'])
+def get_node(node_id):
+    """Get specific node details"""
+    try:
+        node = db.get_node(node_id)
+        if node:
+            # Convert Row to dict
+            node_dict = dict(node) if node else None
+            return jsonify({
+                'success': True,
+                'node': node_dict
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Node not found'
+            }), 404
+    except Exception as e:
+        logger.error(f"Error getting node: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/nodes/<node_id>/packets', methods=['GET'])
+def get_node_packets(node_id):
+    """Get packet history for a specific node"""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        packets = db.get_node_packets(node_id, limit)
+
+        return jsonify({
+            'success': True,
+            'count': len(packets),
+            'packets': packets
+        })
+    except Exception as e:
+        logger.error(f"Error getting node packets: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/nodes/<node_id>/neighbors', methods=['GET'])
+def get_node_neighbors(node_id):
+    """Get neighbors for a specific node"""
+    try:
+        neighbors = db.get_node_neighbors(node_id)
+
+        return jsonify({
+            'success': True,
+            'count': len(neighbors),
+            'neighbors': neighbors
+        })
+    except Exception as e:
+        logger.error(f"Error getting node neighbors: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/topology', methods=['GET'])
+def get_topology():
+    """Get network topology links"""
+    try:
+        active_only = request.args.get('active_only', 'true').lower() == 'true'
+        topology = db.get_topology(active_only)
+
+        return jsonify({
+            'success': True,
+            'count': len(topology),
+            'links': topology
+        })
+    except Exception as e:
+        logger.error(f"Error getting topology: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/topology/hop-graph', methods=['GET'])
+def get_hop_topology():
+    """Get topology organized by hop distance"""
+    try:
+        graph = db.get_hop_topology()
+
+        return jsonify({
+            'success': True,
+            'nodes': graph.get('nodes', []),
+            'edges': graph.get('edges', [])
+        })
+    except Exception as e:
+        logger.error(f"Error getting hop topology: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/traceroutes', methods=['GET'])
+def get_traceroutes():
+    """Get all traceroutes"""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        traceroutes = db.get_traceroutes(limit)
+
+        return jsonify({
+            'success': True,
+            'count': len(traceroutes),
+            'traceroutes': traceroutes
+        })
+    except Exception as e:
+        logger.error(f"Error getting traceroutes: {e}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)
