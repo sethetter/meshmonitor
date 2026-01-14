@@ -80,13 +80,13 @@ class MeshtasticMonitor:
 
         self.running = True
 
-        # Start MQTT broker
+        # Start MQTT broker (optional - not required for MeshLink integration)
         try:
             self.mqtt_broker.start()
             logger.info("MQTT client started successfully")
         except Exception as e:
-            logger.error(f"Failed to start MQTT client: {e}")
-            sys.exit(1)
+            logger.warning(f"Failed to start MQTT client: {e}")
+            logger.warning("MQTT client disabled - HTTP API still available for MeshLink integration")
 
         # Start Flask API server in a separate thread
         api_thread = threading.Thread(target=run_server, daemon=True)

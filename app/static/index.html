@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>📡 Meshtastic MQTT Monitor</h1>
+            <h1>📡 MeshMonitor - MQTT Messages</h1>
             <div class="stats" id="stats">
                 <div class="stat-item">
                     <span class="stat-label">Total Messages:</span>
@@ -26,6 +26,12 @@
                 </div>
             </div>
         </header>
+
+        <nav style="display: flex; gap: 10px; padding: 15px; background: #f8f9fa; border-bottom: 2px solid #e9ecef; flex-wrap: wrap;">
+            <a href="/nodes.html" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">📋 Node List</a>
+            <a href="/traceroutes.html" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">🛤️ Traceroutes</a>
+            <a href="/" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">📡 MQTT Monitor (You are here)</a>
+        </nav>
 
         <div class="main-content">
             <div class="left-panel">
