@@ -59,10 +59,15 @@ class Database:
                 long_name TEXT,
                 short_name TEXT,
                 hardware_model TEXT,
+                first_seen TIMESTAMP,
                 last_seen TIMESTAMP,
                 last_latitude REAL,
                 last_longitude REAL,
-                message_count INTEGER DEFAULT 0
+                message_count INTEGER DEFAULT 0,
+                battery_level INTEGER,
+                voltage REAL,
+                is_charging INTEGER DEFAULT 0,
+                total_packets_received INTEGER DEFAULT 0
             )
         ''')
 
@@ -196,7 +201,21 @@ class Database:
         cursor = conn.cursor()
 
         cursor.execute('''
-            SELECT * FROM nodes
+            SELECT
+                node_id,
+                long_name,
+                short_name,
+                hardware_model,
+                first_seen,
+                last_seen as last_seen_utc,
+                last_latitude as latitude,
+                last_longitude as longitude,
+                message_count,
+                battery_level,
+                voltage,
+                is_charging,
+                total_packets_received
+            FROM nodes
             ORDER BY last_seen DESC
         ''')
 
@@ -210,7 +229,21 @@ class Database:
         cursor = conn.cursor()
 
         cursor.execute('''
-            SELECT * FROM nodes
+            SELECT
+                node_id,
+                long_name,
+                short_name,
+                hardware_model,
+                first_seen,
+                last_seen as last_seen_utc,
+                last_latitude as latitude,
+                last_longitude as longitude,
+                message_count,
+                battery_level,
+                voltage,
+                is_charging,
+                total_packets_received
+            FROM nodes
             WHERE node_id = ?
         ''', (node_id,))
 
@@ -270,32 +303,48 @@ class Database:
             cursor.execute('''
                 INSERT INTO nodes (
                     node_id, long_name, short_name, hardware_model,
-                    last_seen, last_latitude, last_longitude, message_count
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    first_seen, last_seen, last_latitude, last_longitude, message_count,
+                    battery_level, voltage, is_charging, total_packets_received
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(node_id) DO UPDATE SET
                     long_name = COALESCE(?, long_name),
                     short_name = COALESCE(?, short_name),
                     hardware_model = COALESCE(?, hardware_model),
+                    first_seen = COALESCE(first_seen, ?),
                     last_seen = ?,
                     last_latitude = COALESCE(?, last_latitude),
                     last_longitude = COALESCE(?, last_longitude),
-                    message_count = COALESCE(?, message_count)
+                    message_count = COALESCE(?, message_count),
+                    battery_level = COALESCE(?, battery_level),
+                    voltage = COALESCE(?, voltage),
+                    is_charging = COALESCE(?, is_charging),
+                    total_packets_received = COALESCE(?, total_packets_received)
             ''', (
                 node_data.get('node_id'),
                 node_data.get('long_name'),
                 node_data.get('short_name'),
                 node_data.get('hardware_model'),
+                node_data.get('first_seen_utc'),
                 node_data.get('last_seen_utc'),
                 node_data.get('latitude'),
                 node_data.get('longitude'),
+                node_data.get('total_packets_received', 0),
+                node_data.get('battery_level'),
+                node_data.get('voltage'),
+                node_data.get('is_charging', 0),
                 node_data.get('total_packets_received', 0),
                 # For UPDATE clause
                 node_data.get('long_name'),
                 node_data.get('short_name'),
                 node_data.get('hardware_model'),
+                node_data.get('first_seen_utc'),
                 node_data.get('last_seen_utc'),
                 node_data.get('latitude'),
                 node_data.get('longitude'),
+                node_data.get('total_packets_received'),
+                node_data.get('battery_level'),
+                node_data.get('voltage'),
+                node_data.get('is_charging'),
                 node_data.get('total_packets_received')
             ))
             conn.commit()
